@@ -3,6 +3,8 @@ import express, { Request, Response } from "express";
 import router from "./app/routes";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import notFoundHandler from "./middlewares/notFoundHandler";
+import SaveLogsDataOfuser from "./middlewares/SaveLogsData";
+import { deleteOldUserLogs } from "./app/utils/utils";
 const app = express();
 
 // const port = 3000;
@@ -27,7 +29,7 @@ app.use(
 // );
 
 // Monitoring Middleware
-// app.use(SaveLogsDataOfuser);
+app.use(SaveLogsDataOfuser);
 
 app.use("/api/", router);
 
@@ -43,6 +45,8 @@ app.get("/test", (req: Request, res: Response) => {
   Promise.reject();
 });
 
+// Start the cron job
+deleteOldUserLogs(); // This initializes the cron job
 // console.log(process.cwd());
 
 // ErrorHandler

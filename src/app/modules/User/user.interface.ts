@@ -31,3 +31,21 @@ export type TLoginuser = {
   systemId: string;
   userIp: string;
 };
+
+export type TUserLogs = {
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "UNKNOWN_METHOD";
+  url: string;
+  statusCode: number;
+  ipAddress: string;
+  userAgent: string;
+  responseTimeMs: number;
+  systemId: string;
+  userId: string;
+  phone: string;
+  clientReqData: {
+    req: Record<string, any>;
+    query: Record<string, any>;
+    params: Record<string, any>;
+  };
+  clientResData: Record<string, any>;
+};

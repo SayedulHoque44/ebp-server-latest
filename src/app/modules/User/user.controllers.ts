@@ -158,6 +158,17 @@ const deleteSingleUserById = catchAsync(async (req, res) => {
   });
 });
 //
+
+// get all users
+const getUsersLogs = catchAsync(async (req, res) => {
+  const getUserLogs = await userServices.getUsersLogsFromDB(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User Logs retrive Successfully!",
+    data: getUserLogs,
+  });
+});
 export const userControllers = {
   userRegister,
   userLogin,
@@ -168,4 +179,5 @@ export const userControllers = {
   deleteSingleUserById,
   deleteAllUsersLogin,
   getMeForApp,
+  getUsersLogs,
 };

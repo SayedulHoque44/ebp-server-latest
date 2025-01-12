@@ -52,13 +52,16 @@ router.delete(
   userControllers.deleteSingleUserById,
 );
 // get all users
-router.get("/", auth("Admin"), userControllers.getAllUsers);
+router.get("/", userControllers.getAllUsers);
+//
+router.get("/get/logs", userControllers.getUsersLogs);
 // delete all users login
 router.patch(
   "/device/deleteDevices",
   auth("Admin"),
   userControllers.deleteAllUsersLogin,
 );
+// Get User Logs
 
 //
 export const userRoutes = router;

@@ -8,7 +8,7 @@ import { courseTimesModel } from "../courseTime/courseTime.model";
 import { coursesTimeService } from "../courseTime/courseTime.service";
 import { UserSearchFields } from "./user.constant";
 import { TLoginuser, Tuser } from "./user.interface";
-import { userModel } from "./user.model";
+import { userLogsModel, userModel } from "./user.model";
 import { checkSameDeviceFound } from "./user.utils";
 
 // register a user
@@ -529,6 +529,22 @@ const getAllUserFromDB = async (query: Record<string, unknown>) => {
     result,
   };
 };
+const getUsersLogsFromDB = async (query: Record<string, unknown>) => {
+  const users = new QueryBuilder(userLogsModel.find(), query)
+    .search(UserSearchFields)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const meta = await users.countTotal();
+  const result = await users.modelQuery;
+
+  return {
+    meta,
+    result,
+  };
+};
 
 // get single user by id from db
 const deleteSingleUserFromDB = async (id: string) => {
@@ -566,4 +582,5 @@ export const userServices = {
   deleteSingleUserFromDB,
   deleteAllUsersLoginFromDB,
   getMeFromDBForApp,
+  getUsersLogsFromDB,
 };
