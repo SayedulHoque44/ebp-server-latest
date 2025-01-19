@@ -25,3 +25,54 @@ export const deleteOldUserLogs = () => {
 
   console.log("Cron job to delete old user logs has been scheduled.");
 };
+
+const dateFillterGteLte = (
+  query: Record<string, unknown>,
+  targetField: string,
+) => {
+  if (!targetField) {
+    return {};
+  }
+
+  const isValidDate = (date: string): boolean => !isNaN(Date.parse(date));
+
+  // If both gte and lte exist and are valid
+  if (
+    query.gte &&
+    isValidDate(query.gte as string) &&
+    query.lte &&
+    isValidDate(query.lte as string)
+  ) {
+    return {
+      [targetField]: {
+        $gte: new Date(query.gte as string),
+        $lte: new Date(query.lte as string),
+      },
+    };
+  }
+
+  // If only lte exists and is valid
+  if (query.lte && isValidDate(query.lte as string)) {
+    return {
+      [targetField]: {
+        $lte: new Date(query.lte as string),
+      },
+    };
+  }
+
+  // If only gte exists and is valid
+  if (query.gte && isValidDate(query.gte as string)) {
+    return {
+      [targetField]: {
+        $gte: new Date(query.gte as string),
+      },
+    };
+  }
+
+  // Default: return an empty object if no valid filters
+  return {};
+};
+
+export const utils = {
+  dateFillterGteLte,
+};

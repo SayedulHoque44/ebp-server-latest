@@ -26,13 +26,28 @@ class QueryBuilder<T> {
   }
 
   filter() {
-    const queryObj = { ...this.query }; // copy
-
-    // Filtering
+    const queryObj = { ...this.query }; // Copy the query object
     const excludeFields = ["searchTerm", "sort", "limit", "page", "fields"];
-
     excludeFields.forEach(el => delete queryObj[el]);
-    this.modelQuery = this.modelQuery.find(queryObj as FilterQuery<T>);
+
+    const rangeFields = Object.keys(queryObj).filter(key => key.includes("__"));
+    const filterQuery: Record<string, any> = {};
+
+    // Handle range filters (e.g., price__gte, price__lte)
+    rangeFields.forEach(rangeField => {
+      const [field, operator] = rangeField.split("__");
+      if (["gte", "lte"].includes(operator)) {
+        if (!filterQuery[field]) filterQuery[field] = {};
+        filterQuery[field][`$${operator}`] = queryObj[rangeField];
+        delete queryObj[rangeField]; // Clean up the processed field
+      }
+    });
+
+    // Add remaining fields to filterQuery
+    Object.assign(filterQuery, queryObj);
+
+    // Apply filtering to the modelQuery
+    this.modelQuery = this.modelQuery.find(filterQuery as FilterQuery<T>);
 
     return this;
   }

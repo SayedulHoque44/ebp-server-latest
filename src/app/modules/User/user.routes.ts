@@ -52,7 +52,7 @@ router.delete(
   userControllers.deleteSingleUserById,
 );
 // get all users
-router.get("/", userControllers.getAllUsers);
+router.get("/", auth("Admin"), userControllers.getAllUsers);
 //
 router.get("/get/logs", userControllers.getUsersLogs);
 // delete all users login
