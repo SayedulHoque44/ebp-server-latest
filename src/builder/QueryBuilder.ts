@@ -38,7 +38,9 @@ class QueryBuilder<T> {
       const [field, operator] = rangeField.split("__");
       if (["gte", "lte"].includes(operator)) {
         if (!filterQuery[field]) filterQuery[field] = {};
-        filterQuery[field][`$${operator}`] = queryObj[rangeField];
+        filterQuery[field][`$${operator}`] = new Date(
+          queryObj[rangeField] as string,
+        );
         delete queryObj[rangeField]; // Clean up the processed field
       }
     });
