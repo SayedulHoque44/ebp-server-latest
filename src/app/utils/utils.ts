@@ -3,12 +3,12 @@ import { userLogsModel } from "../modules/User/user.model";
 export const deleteOldUserLogs = () => {
   // Schedule the cron job to run every minute
   // Format: "* * * * *" (minute, hour, day of month, month, day of week)
-  cron.schedule("0 0 * * *", async () => {
+  cron.schedule("* * * * *", async () => {
     console.log("Running cron job to delete old user logs...");
 
     try {
       // Calculate the timestamp for 5 minutes ago
-      const timeAgoToDelete = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const timeAgoToDelete = new Date(Date.now() - 1 * 60 * 1000);
 
       // Query to delete logs where `createdAt` is older than 5 minutes
       const result = await userLogsModel.deleteMany({

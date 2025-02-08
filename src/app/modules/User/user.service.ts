@@ -29,6 +29,7 @@ const registerUserIntoDB = async (payload: Tuser) => {
       const updateUser = await userModel.findByIdAndUpdate(existingUser._id, {
         ...payload,
         isDeleted: false,
+        createdAt: new Date(),
       });
       return updateUser;
     } else {
@@ -556,6 +557,8 @@ const deleteSingleUserFromDB = async (id: string) => {
   //
   const deleteUser = await userModel.findByIdAndUpdate(id, {
     isDeleted: true,
+    deviceLogin: [],
+    paymentStatus: "unPaid",
   });
   if (!deleteUser) {
     throw new AppError(httpStatus.NOT_FOUND, "Faild to delete user !");
