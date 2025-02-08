@@ -19,6 +19,7 @@ app.use(
       "http://localhost:5174",
       "http://localhost:4173",
       "https://easybanglapatente.com",
+      "https://easy-bangla-patente.web.app",
     ],
   }),
 );
@@ -41,8 +42,12 @@ app.get("/", starter);
 
 // test route
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-app.get("/test", (req: Request, res: Response) => {
-  Promise.reject();
+app.get("/test", async (req: Request, res: Response) => {
+  try {
+    await Promise.reject();
+  } catch (error) {
+    res.send("Erro Occurs");
+  }
 });
 
 // Start the cron job
