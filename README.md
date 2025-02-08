@@ -1,7 +1,7 @@
-# patente-server-OW
+# [ebp-server-latest](https://ebp-server-latest.vercel.app/)
 
-## Process TODO : Handle User Delete
+## CI/CD
 
-- User Soft deleted - Done
-- Social Links - Done
-- System Id send in every req - Done
+- Development Start To End Staging - Merge Feature branch to Staging
+- Merge Staging to Main
+- Production Branch is main - After Merge Build CMD - Then Push - Autometic deploy to Vercel
