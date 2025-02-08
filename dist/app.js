@@ -53,7 +53,7 @@ app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         yield Promise.reject();
     }
     catch (error) {
-        res.send("Erro Occurs test mai n i am change s");
+        res.send("Erro Occurs test mai n i am changes");
     }
 }));
 // Start the cron job
