@@ -46,7 +46,7 @@ app.get("/test", async (req: Request, res: Response) => {
   try {
     await Promise.reject();
   } catch (error) {
-    res.send("Erro Occurs test main");
+    res.send("Erro Occurs test mai n");
   }
 });
 
