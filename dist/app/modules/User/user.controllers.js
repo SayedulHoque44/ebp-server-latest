@@ -35,11 +35,19 @@ const AppError_1 = __importDefault(require("../../error/AppError"));
 const userRegister = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userData = req.body;
     const createdUser = yield user_service_1.userServices.registerUserIntoDB(userData);
+    let resUser = createdUser;
+    if (createdUser) {
+        // Transform the user to include the student field and exclude paymentStatus
+        // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+        const _a = createdUser.toObject(), { paymentStatus, paymantNote } = _a, userWithoutPaymentStatus = __rest(_a, ["paymentStatus", "paymantNote"]); // Exclude paymentStatus
+        const transformedUser = Object.assign(Object.assign({}, userWithoutPaymentStatus), { student: paymentStatus === "paid" });
+        resUser = transformedUser; // Return the transformed user
+    }
     (0, sendResponse_1.default)(res, {
         statusCode: 201,
         success: true,
         message: "Registerd Successfully!",
-        data: createdUser,
+        data: resUser,
     });
 }));
 // user login
@@ -49,7 +57,7 @@ const userLogin = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void
     userData.systemId = req.headers["x-system-id"] || "Not_Found_SystemId";
     const loggedUserWithToken = yield user_service_1.userServices.loginUser(userData);
     const { user, token } = loggedUserWithToken;
-    const _a = user.toObject(), { paymentStatus, paymantNote } = _a, remainData = __rest(_a, ["paymentStatus", "paymantNote"]);
+    const _b = user.toObject(), { paymentStatus, paymantNote } = _b, remainData = __rest(_b, ["paymentStatus", "paymantNote"]);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
@@ -82,7 +90,7 @@ const getMeForApp = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
     if (getUser) {
         // Transform the user to include the student field and exclude paymentStatus
         // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-        const _b = getUser.toObject(), { paymentStatus, paymantNote } = _b, userWithoutPaymentStatus = __rest(_b, ["paymentStatus", "paymantNote"]); // Exclude paymentStatus
+        const _c = getUser.toObject(), { paymentStatus, paymantNote } = _c, userWithoutPaymentStatus = __rest(_c, ["paymentStatus", "paymantNote"]); // Exclude paymentStatus
         const transformedUser = Object.assign(Object.assign({}, userWithoutPaymentStatus), { student: paymentStatus === "paid" });
         resUser = transformedUser; // Return the transformed user
     }
