@@ -10,12 +10,23 @@ import AppError from "../../error/AppError";
 const userRegister = catchAsync(async (req, res) => {
   const userData = req.body;
   const createdUser = await userServices.registerUserIntoDB(userData);
-
+  let resUser: any = createdUser;
+  if (createdUser) {
+    // Transform the user to include the student field and exclude paymentStatus
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+    const { paymentStatus, paymantNote, ...userWithoutPaymentStatus } =
+      createdUser.toObject(); // Exclude paymentStatus
+    const transformedUser = {
+      ...userWithoutPaymentStatus, // Include all other fields
+      student: paymentStatus === "paid", // Determine student field based on paymentStatus
+    };
+    resUser = transformedUser; // Return the transformed user
+  }
   sendResponse(res, {
     statusCode: 201,
     success: true,
     message: "Registerd Successfully!",
-    data: createdUser,
+    data: resUser,
   });
 });
 
