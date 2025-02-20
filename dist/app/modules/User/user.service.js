@@ -108,7 +108,7 @@ const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
         // device not found -> new device
         if (!sameDevice) {
             // only 2 device login permission
-            if (allDevices.length >= 4) {
+            if (allDevices.length >= 20) {
                 throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "আপনি সর্বোচ্চ ২ টি ডিভাইসে লগ-ইন করতে পারবেন❌");
             }
             // update new device info

@@ -104,7 +104,7 @@ const loginUser = async (payload: TLoginuser) => {
     // device not found -> new device
     if (!sameDevice) {
       // only 2 device login permission
-      if (allDevices.length >= 4) {
+      if (allDevices.length >= 20) {
         throw new AppError(
           httpStatus.BAD_REQUEST,
           "আপনি সর্বোচ্চ ২ টি ডিভাইসে লগ-ইন করতে পারবেন❌",
