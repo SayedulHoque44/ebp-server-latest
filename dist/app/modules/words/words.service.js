@@ -74,10 +74,11 @@ const translateCreateWord = (payload) => __awaiter(void 0, void 0, void 0, funct
             // console.log({translated:translated.data.translations.translatedText});
             // Save the new word to the database
             if ((_b = (_a = translated === null || translated === void 0 ? void 0 : translated.data) === null || _a === void 0 ? void 0 : _a.translations) === null || _b === void 0 ? void 0 : _b.translatedText) {
+                // console.log(translated?.data?.translations?.translatedText);
                 const createdWord = yield words_model_1.WordsModel.create({
                     sourceWords: payload.sourceWords,
                     sourceLang: payload.sourceLang,
-                    translated: translated.data.translations.translatedText,
+                    translated: translated.data.translations.translatedText[0],
                     translatedLang: payload.translatedLang,
                 });
                 return createdWord;

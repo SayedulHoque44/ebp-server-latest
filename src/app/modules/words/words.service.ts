@@ -86,10 +86,11 @@ const translateCreateWord = async (payload: TWords) => {
       // Save the new word to the database
 
       if (translated?.data?.translations?.translatedText) {
+        // console.log(translated?.data?.translations?.translatedText);
         const createdWord = await WordsModel.create({
           sourceWords: payload.sourceWords,
           sourceLang: payload.sourceLang,
-          translated: translated.data.translations.translatedText,
+          translated: translated.data.translations.translatedText[0],
           translatedLang: payload.translatedLang,
         });
         return createdWord;
