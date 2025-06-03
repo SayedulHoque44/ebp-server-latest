@@ -17,8 +17,6 @@ const express_1 = __importDefault(require("express"));
 const routes_1 = __importDefault(require("./app/routes"));
 const globalErrorHandler_1 = __importDefault(require("./middlewares/globalErrorHandler"));
 const notFoundHandler_1 = __importDefault(require("./middlewares/notFoundHandler"));
-const SaveLogsData_1 = __importDefault(require("./middlewares/SaveLogsData"));
-const utils_1 = require("./app/utils/utils");
 const app = (0, express_1.default)();
 // const port = 3000;
 // parser
@@ -39,7 +37,7 @@ app.use((0, cors_1.default)({
 //   }),
 // );
 // Monitoring Middleware
-app.use(SaveLogsData_1.default);
+// app.use(SaveLogsDataOfuser);
 app.use("/api/", routes_1.default);
 //
 const starter = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -57,7 +55,7 @@ app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 }));
 // Start the cron job
-(0, utils_1.deleteOldUserLogs)(); // This initializes the cron job
+// deleteOldUserLogs(); // This initializes the cron job
 // console.log(process.cwd());
 // ErrorHandler
 app.use(globalErrorHandler_1.default);

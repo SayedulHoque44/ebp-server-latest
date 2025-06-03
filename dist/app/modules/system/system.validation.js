@@ -25,6 +25,13 @@ const createSystem = zod_1.z.object({
             status: zod_1.z.enum(["Active", "Inactive"]),
         }))
             .optional(),
+        ads: zod_1.z
+            .array(zod_1.z.object({
+            name: zod_1.z.string(),
+            url: zod_1.z.string(),
+            status: zod_1.z.enum(["Active", "Inactive"]),
+        }))
+            .optional(),
     }),
 });
 const updateSystem = zod_1.z.object({
@@ -44,6 +51,13 @@ const updateSystem = zod_1.z.object({
             .array(zod_1.z.object({ name: zod_1.z.string(), url: zod_1.z.string() }))
             .optional(),
         posters: zod_1.z
+            .array(zod_1.z.object({
+            name: zod_1.z.string(),
+            url: zod_1.z.string(),
+            status: zod_1.z.enum(["Active", "Inactive"]),
+        }))
+            .optional(),
+        ads: zod_1.z
             .array(zod_1.z.object({
             name: zod_1.z.string(),
             url: zod_1.z.string(),

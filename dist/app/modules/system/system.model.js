@@ -12,6 +12,11 @@ const postersSchema = new mongoose_1.Schema({
     url: { type: String, required: true },
     status: { type: String, required: true },
 });
+const adsSchema = new mongoose_1.Schema({
+    name: { type: String, required: true },
+    url: { type: String, required: true },
+    status: { type: String, required: true },
+});
 const systemInfoSchema = new mongoose_1.Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
@@ -28,6 +33,7 @@ const systemInfoSchema = new mongoose_1.Schema({
     social_media: { type: [social_mediaSchema] },
     redirect_url: { type: [social_mediaSchema] },
     posters: { type: [postersSchema] },
+    ads: { type: [adsSchema] },
 });
 const controlsSchema = new mongoose_1.Schema({
     systemId: { type: mongoose_1.Schema.Types.ObjectId, required: true, ref: "systemInfo" },

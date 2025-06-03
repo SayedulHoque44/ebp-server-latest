@@ -25,6 +25,15 @@ const createSystem = z.object({
         }),
       )
       .optional(),
+    ads: z
+      .array(
+        z.object({
+          name: z.string(),
+          url: z.string(),
+          status: z.enum(["Active", "Inactive"]),
+        }),
+      )
+      .optional(),
   }),
 });
 
@@ -45,6 +54,15 @@ const updateSystem = z.object({
       .array(z.object({ name: z.string(), url: z.string() }))
       .optional(),
     posters: z
+      .array(
+        z.object({
+          name: z.string(),
+          url: z.string(),
+          status: z.enum(["Active", "Inactive"]),
+        }),
+      )
+      .optional(),
+    ads: z
       .array(
         z.object({
           name: z.string(),

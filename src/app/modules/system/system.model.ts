@@ -17,6 +17,11 @@ const postersSchema = new Schema<TPoster>({
   url: { type: String, required: true },
   status: { type: String, required: true },
 });
+const adsSchema = new Schema<TPoster>({
+  name: { type: String, required: true },
+  url: { type: String, required: true },
+  status: { type: String, required: true },
+});
 
 const systemInfoSchema = new Schema<TSystemInfo>({
   title: { type: String, required: true },
@@ -34,6 +39,7 @@ const systemInfoSchema = new Schema<TSystemInfo>({
   social_media: { type: [social_mediaSchema] },
   redirect_url: { type: [social_mediaSchema] },
   posters: { type: [postersSchema] },
+  ads: { type: [adsSchema] },
 });
 
 const controlsSchema = new Schema<TControls>({

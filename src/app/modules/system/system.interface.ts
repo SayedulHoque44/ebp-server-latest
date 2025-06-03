@@ -25,6 +25,11 @@ export type TPoster = {
   url: string;
   status: "Active" | "Inactive";
 };
+export type TAds = {
+  name: string;
+  url: string;
+  status: "Active" | "Inactive";
+};
 
 // using systemInfo id we can get identify user using system , like use in the when using in the login/getme
 export type TSystemInfo = {
@@ -44,6 +49,7 @@ export type TSystemInfo = {
   social_media?: TSocialMedia[]; // social media of the system
   redirect_url?: TSocialMedia[]; // redirect url of the system like if we want to redirect to any other url of any content
   posters: TPoster[]; // posters of the system
+  ads: TAds[]; // posters of the system
 };
 
 //  ------------ controlls for Web ------------------
