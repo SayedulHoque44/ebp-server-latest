@@ -26,17 +26,18 @@ function createRateLimiter({
   return async (req: any, res: Response, next: () => void) => {
     // Determine identifier based on type
     let identifier: string;
+    const ipAddress = req.headers["x-forwarded-for"] || req.ip || "UNKNOWN_IP";
     switch (type) {
       case "auth":
-        identifier = `auth:${req.ip}`;
+        identifier = `auth:${ipAddress}`;
         break;
       case "api":
         identifier = req.user
           ? `api:user:${(req.user as { id: string }).id}`
-          : `api:ip:${req.ip}`;
+          : `api:ip:${ipAddress}`;
         break;
       default:
-        identifier = `global:${req.ip}`;
+        identifier = `global:${ipAddress}`;
     }
 
     const { allowed, remaining, reset, timeLeft }: RateLimitResult =

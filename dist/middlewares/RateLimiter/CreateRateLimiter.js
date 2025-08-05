@@ -20,17 +20,18 @@ function createRateLimiter({ windowMs, maxRequests, type, }) {
     return (req, res, next) => __awaiter(this, void 0, void 0, function* () {
         // Determine identifier based on type
         let identifier;
+        const ipAddress = req.headers["x-forwarded-for"] || req.ip || "UNKNOWN_IP";
         switch (type) {
             case "auth":
-                identifier = `auth:${req.ip}`;
+                identifier = `auth:${ipAddress}`;
                 break;
             case "api":
                 identifier = req.user
                     ? `api:user:${req.user.id}`
-                    : `api:ip:${req.ip}`;
+                    : `api:ip:${ipAddress}`;
                 break;
             default:
-                identifier = `global:${req.ip}`;
+                identifier = `global:${ipAddress}`;
         }
         const { allowed, remaining, reset, timeLeft } = yield CheckRateLimit(identifier, windowMs, maxRequests);
         if (!allowed) {
