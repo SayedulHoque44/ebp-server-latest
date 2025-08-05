@@ -48,17 +48,9 @@ const moduleRoutes = [
     path: "/Quizzes",
     route: topicQuizzes,
   },
-  {
-    path: "/YTVideo",
-    route: YTVideoRoutes,
-  },
   // {
-  //   path: "/trucchi",
-  //   route: trucchiRoutes,
-  // },
-  // {
-  //   path: "/stdNote",
-  //   route: stdNoteRoutes,
+  //   path: "/YTVideo",
+  //   route: YTVideoRoutes,
   // },
   {
     path: "/UniContent",

@@ -9,11 +9,12 @@ const auth_1 = __importDefault(require("../../../middlewares/auth"));
 const validateRequest_1 = __importDefault(require("../../../middlewares/validateRequest"));
 const user_controllers_1 = require("./user.controllers");
 const user_validation_1 = require("./user.validation");
+const CreateRateLimiter_1 = require("../../../middlewares/RateLimiter/CreateRateLimiter");
 const router = express_1.default.Router();
 // register user
-router.post("/register", (0, validateRequest_1.default)(user_validation_1.userValidationSchema.registerUser), user_controllers_1.userControllers.userRegister);
+router.post("/register", CreateRateLimiter_1.ConfigLimiter.auth, (0, validateRequest_1.default)(user_validation_1.userValidationSchema.registerUser), user_controllers_1.userControllers.userRegister);
 // login user
-router.post("/login", (0, validateRequest_1.default)(user_validation_1.userValidationSchema.loginUser), user_controllers_1.userControllers.userLogin);
+router.post("/login", CreateRateLimiter_1.ConfigLimiter.auth, (0, validateRequest_1.default)(user_validation_1.userValidationSchema.loginUser), user_controllers_1.userControllers.userLogin);
 // getMe
 router.post("/getMe", (0, auth_1.default)("Admin", "Student"), (0, validateRequest_1.default)(user_validation_1.userValidationSchema.meSchema), user_controllers_1.userControllers.getMe);
 // getMe

@@ -3,18 +3,21 @@ import auth from "../../../middlewares/auth";
 import validateRequest from "../../../middlewares/validateRequest";
 import { userControllers } from "./user.controllers";
 import { userValidationSchema } from "./user.validation";
+import { ConfigLimiter } from "../../../middlewares/RateLimiter/CreateRateLimiter";
 
 const router = express.Router();
 
 // register user
 router.post(
   "/register",
+  ConfigLimiter.auth,
   validateRequest(userValidationSchema.registerUser),
   userControllers.userRegister,
 );
 // login user
 router.post(
   "/login",
+  ConfigLimiter.auth,
   validateRequest(userValidationSchema.loginUser),
   userControllers.userLogin,
 );

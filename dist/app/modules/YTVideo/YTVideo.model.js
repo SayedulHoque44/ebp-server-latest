@@ -24,5 +24,5 @@ const YTVideoSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-//
+// TODO: After check YTVideoModel is not used anywhere, remove it
 exports.YTVideoModel = (0, mongoose_1.model)("youtubeVideo", YTVideoSchema);

@@ -27,5 +27,5 @@ const YTVideoSchema = new Schema<TYTVideo>(
   },
 );
 
-//
+// TODO: After check YTVideoModel is not used anywhere, remove it
 export const YTVideoModel = model<TYTVideo>("youtubeVideo", YTVideoSchema);

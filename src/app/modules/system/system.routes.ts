@@ -6,6 +6,13 @@ import httpStatus from "http-status";
 import sendResponse from "../../utils/sendResponse";
 import validateRequest from "../../../middlewares/validateRequest";
 import { systemValidations } from "./system.validation";
+import { RateLimitModel } from "../RateLimiter/RateLimit.model";
+import { ArgTopicsModel } from "../ArgTopics/argTopics.model";
+import { ArgumentsModel } from "../Arguments/arguments.model";
+import { BlogModel } from "../Blogs/Blogs.model";
+import { courseTimesModel } from "../courseTime/courseTime.model";
+import { QNAPdfModel } from "../QNAPdf/QNAPdf.model";
+import { QuizImageModel } from "../QuizImage/quizImage.model";
 
 const router = express.Router();
 
@@ -108,6 +115,52 @@ router.get(
       message: "System retrive Successfully!",
       data: exitsSystem,
     });
+  }),
+);
+
+// HeapStatus routes
+router.get(
+  "/status",
+  catchAsync(async (req, res) => {
+    try {
+      const memoryUsage = process.memoryUsage();
+      const rateLimitRecords = await RateLimitModel.estimatedDocumentCount();
+
+      const Arguments = await ArgumentsModel.estimatedDocumentCount();
+      const Theory = await ArgTopicsModel.estimatedDocumentCount();
+      const QuizImages = await QuizImageModel.estimatedDocumentCount();
+
+      const Blogs = await BlogModel.estimatedDocumentCount();
+
+      const courseTimes = await courseTimesModel.estimatedDocumentCount();
+      const QNAPdfs = await QNAPdfModel.estimatedDocumentCount();
+
+      const QuizInfo = {
+        Arguments,
+        Theory,
+        QuizImages,
+      };
+
+      const DocumentCount = {
+        rateLimitRecords,
+        Blogs,
+        courseTimes,
+        QNAPdfs,
+        QuizInfo,
+      };
+      const Memory = {
+        rss: `${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB`,
+        heapTotal: `${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB`,
+        heapUsed: `${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB`,
+        memoryUsage: memoryUsage,
+      };
+      res.json({
+        DocumentCount,
+        Memory,
+      });
+    } catch (err) {
+      res.status(500).json({ error: "Monitoring unavailable" });
+    }
   }),
 );
 

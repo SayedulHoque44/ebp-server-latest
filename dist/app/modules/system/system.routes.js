@@ -21,6 +21,13 @@ const http_status_1 = __importDefault(require("http-status"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const validateRequest_1 = __importDefault(require("../../../middlewares/validateRequest"));
 const system_validation_1 = require("./system.validation");
+const RateLimit_model_1 = require("../RateLimiter/RateLimit.model");
+const argTopics_model_1 = require("../ArgTopics/argTopics.model");
+const arguments_model_1 = require("../Arguments/arguments.model");
+const Blogs_model_1 = require("../Blogs/Blogs.model");
+const courseTime_model_1 = require("../courseTime/courseTime.model");
+const QNAPdf_model_1 = require("../QNAPdf/QNAPdf.model");
+const quizImage_model_1 = require("../QuizImage/quizImage.model");
 const router = express_1.default.Router();
 router.post("/create", (0, validateRequest_1.default)(system_validation_1.systemValidations.createSystem), (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const exitsSystem = yield system_model_1.SystemInfoModel.findOne({
@@ -88,5 +95,43 @@ router.get("/", (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0
         message: "System retrive Successfully!",
         data: exitsSystem,
     });
+})));
+// HeapStatus routes
+router.get("/status", (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const memoryUsage = process.memoryUsage();
+        const rateLimitRecords = yield RateLimit_model_1.RateLimitModel.estimatedDocumentCount();
+        const Arguments = yield arguments_model_1.ArgumentsModel.estimatedDocumentCount();
+        const Theory = yield argTopics_model_1.ArgTopicsModel.estimatedDocumentCount();
+        const QuizImages = yield quizImage_model_1.QuizImageModel.estimatedDocumentCount();
+        const Blogs = yield Blogs_model_1.BlogModel.estimatedDocumentCount();
+        const courseTimes = yield courseTime_model_1.courseTimesModel.estimatedDocumentCount();
+        const QNAPdfs = yield QNAPdf_model_1.QNAPdfModel.estimatedDocumentCount();
+        const QuizInfo = {
+            Arguments,
+            Theory,
+            QuizImages,
+        };
+        const DocumentCount = {
+            rateLimitRecords,
+            Blogs,
+            courseTimes,
+            QNAPdfs,
+            QuizInfo,
+        };
+        const Memory = {
+            rss: `${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB`,
+            heapTotal: `${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB`,
+            heapUsed: `${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB`,
+            memoryUsage: memoryUsage,
+        };
+        res.json({
+            DocumentCount,
+            Memory,
+        });
+    }
+    catch (err) {
+        res.status(500).json({ error: "Monitoring unavailable" });
+    }
 })));
 exports.systemRoutes = router;

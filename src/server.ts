@@ -25,19 +25,23 @@ main();
 
 // unhandle Rejection --> unhandaled error gula catch korar por server close korar jonno
 // for Asyncrhonus:
-// process.on("unhandledRejection", () => {
-//   console.log(`😈 unhandledRejection is detected, Shutting Down the Server`);
-//   if (server) {
-//     //at first of the server then -> process close/exit
-//     server.close(() => {
-//       process.exit(1);
-//     });
-//   }
-//   process.exit(1);
-// });
+process.on("unhandledRejection", err => {
+  console.log(`😈 unhandledRejection is detected, Shutting Down the Server`);
+  // if (server) {
+  //at first of the server then -> process close/exit
+  //   server.close(() => {
+  //     process.exit(1);
+  //   });
+  // }
+  // process.exit(1);
+  console.error("Unhandled Rejection detected,", err);
+});
 
 // for Synchrouns:
-// process.on("uncaughtException", () => {
-//   console.log(`😈 uncaughtException is detected, Shutting Down the Server`);
-//   process.exit(1);
-// });
+process.on("uncaughtException", err => {
+  console.log(
+    `😈 uncaughtException is detected, Shutting Down the Server`,
+    err,
+  );
+  // process.exit(1);
+});

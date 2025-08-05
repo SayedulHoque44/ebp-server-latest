@@ -17,6 +17,8 @@ const express_1 = __importDefault(require("express"));
 const routes_1 = __importDefault(require("./app/routes"));
 const globalErrorHandler_1 = __importDefault(require("./middlewares/globalErrorHandler"));
 const notFoundHandler_1 = __importDefault(require("./middlewares/notFoundHandler"));
+const RateLimit_model_1 = require("./app/modules/RateLimiter/RateLimit.model");
+const CreateRateLimiter_1 = require("./middlewares/RateLimiter/CreateRateLimiter");
 const app = (0, express_1.default)();
 // const port = 3000;
 // parser
@@ -38,7 +40,26 @@ app.use((0, cors_1.default)({
 // );
 // Monitoring Middleware
 // app.use(SaveLogsDataOfuser);
+// Apply global rate limiter to all routes
+app.use(CreateRateLimiter_1.ConfigLimiter.global);
 app.use("/api/", routes_1.default);
+// Monitoring endpoint
+app.get("/api/status", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const memoryUsage = process.memoryUsage();
+        const rateLimitRecords = yield RateLimit_model_1.RateLimitModel.estimatedDocumentCount();
+        res.json({
+            rateLimitRecords,
+            rss: `${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB`,
+            heapTotal: `${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB`,
+            heapUsed: `${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB`,
+            memoryUsage: memoryUsage,
+        });
+    }
+    catch (err) {
+        res.status(500).json({ error: "Monitoring unavailable" });
+    }
+}));
 //
 const starter = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.send("Easy Bangla Patente 🚗!");

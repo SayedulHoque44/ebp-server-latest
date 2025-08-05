@@ -3,6 +3,8 @@ import express, { Request, Response } from "express";
 import router from "./app/routes";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import notFoundHandler from "./middlewares/notFoundHandler";
+import { RateLimitModel } from "./app/modules/RateLimiter/RateLimit.model";
+import { ConfigLimiter } from "./middlewares/RateLimiter/CreateRateLimiter";
 
 const app = express();
 
@@ -31,7 +33,27 @@ app.use(
 // Monitoring Middleware
 // app.use(SaveLogsDataOfuser);
 
+// Apply global rate limiter to all routes
+app.use(ConfigLimiter.global);
+
 app.use("/api/", router);
+
+// Monitoring endpoint
+app.get("/api/status", async (req, res) => {
+  try {
+    const memoryUsage = process.memoryUsage();
+    const rateLimitRecords = await RateLimitModel.estimatedDocumentCount();
+    res.json({
+      rateLimitRecords,
+      rss: `${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB`,
+      heapTotal: `${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB`,
+      heapUsed: `${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB`,
+      memoryUsage: memoryUsage,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Monitoring unavailable" });
+  }
+});
 
 //
 const starter = async (req: Request, res: Response) => {

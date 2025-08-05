@@ -9,7 +9,6 @@ const courseTime_routes_1 = require("../modules/courseTime/courseTime.routes");
 const quizImage_routes_1 = require("../modules/QuizImage/quizImage.routes");
 const argTopics_routes_1 = require("../modules/ArgTopics/argTopics.routes");
 const topicQuizzes_routes_1 = require("../modules/TopicQuizzes/topicQuizzes.routes");
-const YTVideo_routes_1 = require("../modules/YTVideo/YTVideo.routes");
 const UniContent_routes_1 = require("../modules/UniContent/UniContent.routes");
 const FileUplodeOperation_1 = require("../modules/FileUplodeOperation");
 const words_routes_1 = require("../modules/words/words.routes");
@@ -48,17 +47,9 @@ const moduleRoutes = [
         path: "/Quizzes",
         route: topicQuizzes_routes_1.topicQuizzes,
     },
-    {
-        path: "/YTVideo",
-        route: YTVideo_routes_1.YTVideoRoutes,
-    },
     // {
-    //   path: "/trucchi",
-    //   route: trucchiRoutes,
-    // },
-    // {
-    //   path: "/stdNote",
-    //   route: stdNoteRoutes,
+    //   path: "/YTVideo",
+    //   route: YTVideoRoutes,
     // },
     {
         path: "/UniContent",
