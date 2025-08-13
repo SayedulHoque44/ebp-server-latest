@@ -10,14 +10,14 @@ const router = express.Router();
 // register user
 router.post(
   "/register",
-  // ConfigLimiter.auth,
+  ConfigLimiter.auth,
   validateRequest(userValidationSchema.registerUser),
   userControllers.userRegister,
 );
 // login user
 router.post(
   "/login",
-  // ConfigLimiter.auth,
+  ConfigLimiter.auth,
   validateRequest(userValidationSchema.loginUser),
   userControllers.userLogin,
 );
