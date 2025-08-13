@@ -150,7 +150,7 @@ exports.ConfigLimiter = {
         type: "global",
     }),
     auth: createRateLimiter({
-        windowMs: 60 * 60 * 1000, // 1 hour
+        windowMs: 15 * 60 * 1000, // 15 minutes
         maxRequests: 5,
         type: "auth",
     }),
