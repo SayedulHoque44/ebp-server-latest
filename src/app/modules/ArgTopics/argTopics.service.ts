@@ -99,18 +99,73 @@ const getSingleArgTopicByIdFromDb = async (argTopicId: string) => {
   return argTopic;
 };
 
-const getArgTopicsQueryFromDb = async (query: Record<string, unknown>) => {
+// This function seems generally okay based on the signature and usage.
+// It takes a `query` object and an array of `argumentIds`, builds up a query using QueryBuilder,
+// filters by those provided ids if the array is non-empty, then returns paginated results with some populations.
+//
+// A couple of minor suggestions for robustness/readability (not errors):
+//  - confirm that argumentIds will always be provided (default to [] if not?)
+//  - check for null/undefined before .length on argumentIds
+// Otherwise, it works as intended.
+const getArgTopicsQueryFromDb = async (
+  query: Record<string, unknown>,
+  argumentIds: string[] = [],
+) => {
+  const countWQuery = query.count ? query.count : false;
+  delete query.count;
   const argTopicsQuery = new QueryBuilder(ArgTopicsModel.find(), query)
     .search(["title", "theory"])
     .filter()
     .sort()
     .paginate()
     .fields();
+  if (Array.isArray(argumentIds) && argumentIds.length > 0) {
+    argTopicsQuery.modelQuery.where({
+      argumentId: {
+        $in: argumentIds,
+      },
+    });
+  }
 
-  const result = await argTopicsQuery.modelQuery.populate(
+  let result = await argTopicsQuery.modelQuery.populate(
     "image theoryImages argumentId",
   );
   const meta = await argTopicsQuery.countTotal();
+
+  if (countWQuery) {
+    // Extract all ArgTopic IDs from the result
+    const argTopicIds = (result as (mongoose.Document & TArgTopic)[]).map(
+      argTopic => argTopic._id,
+    );
+
+    // Get all quiz counts in a single aggregation query
+    const quizCounts = await TopicQuizModel.aggregate([
+      {
+        $match: {
+          ArgTopicId: { $in: argTopicIds },
+          isDeleted: false,
+        },
+      },
+      {
+        $group: {
+          _id: "$ArgTopicId",
+          totalQuizzes: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Create a map for O(1) lookup
+    const countMap = new Map(
+      quizCounts.map(item => [item._id.toString(), item.totalQuizzes]),
+    );
+
+    // Merge counts into results
+    result = (result as (mongoose.Document & TArgTopic)[]).map(argTopic => ({
+      ...argTopic.toObject(),
+      totalQuizzes: countMap.get(argTopic._id.toString()) || 0,
+    }));
+  }
+
   return {
     meta,
     result,

@@ -7,11 +7,11 @@ import { courseTimeRoutes } from "../modules/courseTime/courseTime.routes";
 import { QuizImagesRoutes } from "../modules/QuizImage/quizImage.routes";
 import { argTopicRoutes } from "../modules/ArgTopics/argTopics.routes";
 import { topicQuizzes } from "../modules/TopicQuizzes/topicQuizzes.routes";
-import { YTVideoRoutes } from "../modules/YTVideo/YTVideo.routes";
 import { UniContentRoutes } from "../modules/UniContent/UniContent.routes";
 import { mediaRoutes } from "../modules/FileUplodeOperation";
 import { wordsRoutes } from "../modules/words/words.routes";
 import { systemRoutes } from "../modules/system/system.routes";
+import { userQuizzesRoutes } from "../modules/UserQuizzes/userQuiz.routes";
 
 const router = Router();
 
@@ -67,6 +67,10 @@ const moduleRoutes = [
   {
     path: "/system",
     route: systemRoutes,
+  },
+  {
+    path: "/userQuizzes",
+    route: userQuizzesRoutes,
   },
 ];
 

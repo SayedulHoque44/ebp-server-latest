@@ -37,5 +37,9 @@ const topicQuizSchema = new Schema<TTopicQuiz>(
   { timestamps: true },
 );
 
+// Add indexes for better query performance
+topicQuizSchema.index({ argumentId: 1, isDeleted: 1 });
+topicQuizSchema.index({ ArgTopicId: 1, isDeleted: 1 });
+
 // model
 export const TopicQuizModel = model<TTopicQuiz>("TopicQuizze", topicQuizSchema);

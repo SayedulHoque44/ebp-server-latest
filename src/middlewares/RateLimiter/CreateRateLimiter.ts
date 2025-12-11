@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import sendResponse from "../../app/utils/sendResponse";
 import httpStatus from "http-status";
 import { RateLimitModel } from "../../app/modules/RateLimiter/RateLimit.model";
@@ -85,48 +85,45 @@ const CheckRateLimit = async (
   const windowStart: Date = new Date(now.getTime() - windowMs);
 
   try {
-    // First try to update existing record within current window
-    let result: any = await RateLimitModel.findOneAndUpdate(
-      {
-        key: identifier,
-        firstRequest: { $gte: windowStart }, // Within current window
-      },
-      {
-        $inc: { count: 1 },
-        $set: { lastRequest: now },
-      },
-      {
-        new: true,
-        projection: { count: 1, firstRequest: 1 },
-      },
-    );
-
-    // If no update happened, either window expired or record doesn't exist
-    if (!result) {
-      result = await RateLimitModel.findOneAndUpdate(
-        {
-          key: identifier,
-          // Only reset if window has expired or doesn't exist
-          $or: [
-            { firstRequest: { $lt: windowStart } },
-            { firstRequest: { $exists: false } },
-          ],
-        },
+    // Single atomic upsert to avoid duplicate-key races under concurrency.
+    // Pipeline keeps logic server-side; avoids $setOnInsert (not allowed in pipeline updates).
+    const result: any = await RateLimitModel.findOneAndUpdate(
+      { key: identifier },
+      [
+        // Initialize missing fields when inserting (or if somehow null).
         {
           $set: {
-            count: 1,
-            firstRequest: now,
+            firstRequest: { $ifNull: ["$firstRequest", now] },
+            count: { $ifNull: ["$count", 0] },
+          },
+        },
+        // Determine if the window is expired.
+        {
+          $set: {
+            expired: { $lt: ["$firstRequest", windowStart] },
+          },
+        },
+        // Reset window if expired, otherwise increment.
+        {
+          $set: {
+            count: {
+              $cond: [{ $eq: ["$expired", true] }, 1, { $add: ["$count", 1] }],
+            },
+            firstRequest: {
+              $cond: [{ $eq: ["$expired", true] }, now, "$firstRequest"],
+            },
             lastRequest: now,
           },
         },
-        {
-          new: true,
-          upsert: true,
-          projection: { count: 1, firstRequest: 1 },
-        },
-      );
-    }
-
+        { $unset: "expired" },
+      ],
+      {
+        new: true,
+        upsert: true,
+        projection: { count: 1, firstRequest: 1 },
+      },
+    );
+    // console.log(result);
     if (!result) {
       throw new Error("Rate limit record not found or created");
     }

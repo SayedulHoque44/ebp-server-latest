@@ -98,18 +98,37 @@ const getArgumentsQueryFromDb = async (query: Record<string, unknown>) => {
   const meta = await argumentsQuery.countTotal();
 
   if (countWQuery) {
-    result = await Promise.all(
-      result.map(async (arg: any) => {
-        const totalQuizzes = await TopicQuizModel.countDocuments({
-          argumentId: arg._id,
-        });
-
-        return {
-          ...arg.toObject(),
-          totalQuizzes,
-        };
-      }),
+    // Extract all argument IDs from the result
+    const argumentIds = (result as (mongoose.Document & TArgument)[]).map(
+      arg => arg._id,
     );
+
+    // Get all quiz counts in a single aggregation query
+    const quizCounts = await TopicQuizModel.aggregate([
+      {
+        $match: {
+          argumentId: { $in: argumentIds },
+          isDeleted: false,
+        },
+      },
+      {
+        $group: {
+          _id: "$argumentId",
+          totalQuizzes: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Create a map for O(1) lookup
+    const countMap = new Map(
+      quizCounts.map(item => [item._id.toString(), item.totalQuizzes]),
+    );
+
+    // Merge counts into results
+    result = (result as (mongoose.Document & TArgument)[]).map(arg => ({
+      ...arg.toObject(),
+      totalQuizzes: countMap.get(arg._id.toString()) || 0,
+    }));
   }
   return {
     meta,

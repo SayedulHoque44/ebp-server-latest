@@ -81,6 +81,30 @@ const getQuizzesQueryFromDbinApp = catchAsync(async (req, res) => {
   });
 });
 
+const getRandomTopicQuizzesByTopicsIds = catchAsync(async (req, res) => {
+  const randomTopicQuizzes =
+    await TopicQuizServices.getRandomTopicQuizzesByTopicsIdsFromDb(
+      req.body.topicsIds,
+    );
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: "Random Topic Quizzes retrive Successfully!",
+    data: randomTopicQuizzes,
+  });
+});
+
+const getRandomThirtyQuizzes = catchAsync(async (req, res) => {
+  const randomThirtyQuizzes =
+    await TopicQuizServices.getRandomThirtyQuizzesFromDB();
+  sendResponse(res, {
+    statusCode: 201,
+    success: true,
+    message: "Random Thirty Quizzes retrive Successfully!",
+    data: randomThirtyQuizzes,
+  });
+});
+
 export const TopicQuizControllers = {
   createTopicQuiz,
   updateTopicQuiz,
@@ -88,4 +112,6 @@ export const TopicQuizControllers = {
   getTopicQuizzesByQuery,
   deleteTopicQuiz,
   getQuizzesQueryFromDbinApp,
+  getRandomTopicQuizzesByTopicsIds,
+  getRandomThirtyQuizzes,
 };

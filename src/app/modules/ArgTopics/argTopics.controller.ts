@@ -41,8 +41,10 @@ const getSingleArgTopicById = catchAsync(async (req, res) => {
 });
 
 const getArgTopicsByQuery = catchAsync(async (req, res) => {
-  const args = await ArgTopicServices.getArgTopicsQueryFromDb(req.query);
-
+  const args = await ArgTopicServices.getArgTopicsQueryFromDb(
+    req.query,
+    req.body?.argumentIds || [],
+  );
   sendResponse(res, {
     statusCode: 201,
     success: true,

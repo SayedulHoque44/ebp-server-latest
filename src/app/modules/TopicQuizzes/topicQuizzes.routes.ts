@@ -22,10 +22,19 @@ router.patch(
   validateRequest(argumentsValidation.updateArgumentSchema),
   TopicQuizControllers.updateTopicQuiz,
 );
+// random topic quizzes
+router.post(
+  "/random/by-topics-ids",
+  TopicQuizControllers.getRandomTopicQuizzesByTopicsIds,
+);
+// random thirty quizzes - from random arguments with 2 quizzes from first 5 arguments and 1 quiz from remaining 20 arguments
+router.get(
+  "/random/thirty-quizzes",
+  TopicQuizControllers.getRandomThirtyQuizzes,
+);
 // delete
 router.delete("/:topicQuizId", TopicQuizControllers.deleteTopicQuiz);
 // --------------- App
 router.get("/app/query", TopicQuizControllers.getQuizzesQueryFromDbinApp);
-
 // export route
 export const topicQuizzes = router;

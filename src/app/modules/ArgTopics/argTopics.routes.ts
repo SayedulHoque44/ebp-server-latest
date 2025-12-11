@@ -14,6 +14,7 @@ router.post(
 );
 // get all
 router.get("/", ArgTopicControllers.getArgTopicsByQuery);
+router.post("/get-by-argIds", ArgTopicControllers.getArgTopicsByQuery);
 // single get
 router.get("/:argTopicId", ArgTopicControllers.getSingleArgTopicById);
 // update
