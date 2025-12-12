@@ -7,38 +7,102 @@ import { userModel } from "../User/user.model";
 import QueryBuilder from "../../../builder/QueryBuilder";
 
 const createUserQuizIntoDB = async (payload: TUserQuiz[]) => {
-  //check user exits
-  const user = await userModel.findById(payload[0].userId).lean();
+  // Early validation: check if payload is empty
+  if (!payload || payload.length === 0) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Payload cannot be empty!");
+  }
+
+  const userId = payload[0].userId;
+
+  // Step 1: Check user exists (single query)
+  const user = await userModel.findById(userId).lean();
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User Not Found!");
   }
-  for (const madeQuiz of payload) {
-    //check quiz exits
-    const quiz = await TopicQuizModel.findById(madeQuiz.quizId);
-    if (!quiz) {
-      continue;
-    }
 
-    //check quiz already made by same user
-    const alreadyMadeQuiz = await UserQuizModel.findOne({
-      quizId: madeQuiz.quizId,
-      userId: madeQuiz.userId,
-    });
-    if (alreadyMadeQuiz) {
-      await UserQuizModel.findByIdAndUpdate(alreadyMadeQuiz._id, {
-        givenAnswer: madeQuiz.givenAnswer,
-        isCorrect: madeQuiz.isCorrect,
-        playedCount: alreadyMadeQuiz.playedCount + 1,
-      });
-    } else {
-      await UserQuizModel.create(madeQuiz);
-    }
+  // Step 2: Batch check all quizzes exist at once (single query)
+  const quizIds = [...new Set(payload.map(quiz => quiz.quizId))];
+  const existingQuizzes = await TopicQuizModel.find({
+    _id: { $in: quizIds },
+  })
+    .select("_id")
+    .lean();
+
+  const existingQuizIds = new Set(
+    existingQuizzes.map(quiz => quiz._id.toString()),
+  );
+
+  // Filter out invalid quizzes
+  const validPayload = payload.filter(quiz =>
+    existingQuizIds.has(quiz.quizId.toString()),
+  );
+
+  if (validPayload.length === 0) {
+    return { user, quizzesAdded: 0 };
   }
-  return { user, quizzesAdded: payload.length };
+
+  // Step 3: Batch check all existing user quizzes at once (single query)
+  const existingUserQuizIds = validPayload.map(quiz => quiz.quizId);
+  const existingUserQuizzes = await UserQuizModel.find({
+    userId,
+    quizId: { $in: existingUserQuizIds },
+  }).lean();
+
+  // Create a map for quick lookup: quizId -> existingUserQuiz
+  const existingUserQuizMap = new Map(
+    existingUserQuizzes.map(quiz => [quiz.quizId.toString(), quiz]),
+  );
+
+  // Step 4: Prepare bulk operations (updates and inserts)
+  const bulkOps = validPayload.map(madeQuiz => {
+    const existingUserQuiz = existingUserQuizMap.get(
+      madeQuiz.quizId.toString(),
+    );
+
+    if (existingUserQuiz) {
+      // Update existing quiz
+      return {
+        updateOne: {
+          filter: { _id: existingUserQuiz._id },
+          update: {
+            $set: {
+              givenAnswer: madeQuiz.givenAnswer,
+              isCorrect: madeQuiz.isCorrect,
+            },
+            $inc: { playedCount: 1 },
+          },
+        },
+      };
+    } else {
+      // Insert new quiz
+      return {
+        insertOne: {
+          document: {
+            ...madeQuiz,
+            playedCount: madeQuiz.playedCount || 1,
+          },
+        },
+      };
+    }
+  });
+
+  // Step 5: Execute all operations in a single bulk write (much faster!)
+  if (bulkOps.length > 0) {
+    await UserQuizModel.bulkWrite(bulkOps, { ordered: false });
+  }
+
+  return { user, quizzesAdded: validPayload.length };
 };
 
 const getUserQuizByQuery = async (query: Record<string, unknown>) => {
+  // Convert string boolean to actual boolean for isCorrect
+  if (query.isCorrect !== undefined) {
+    query.isCorrect = query.isCorrect === "true" || query.isCorrect === true;
+  }
+
+  // console.log(query);
   const userQuiz = new QueryBuilder(UserQuizModel.find(), query)
+    .filter()
     .sort()
     .paginate()
     .fields();
@@ -50,7 +114,104 @@ const getUserQuizByQuery = async (query: Record<string, unknown>) => {
   };
 };
 
+const getRandomPlayedQuizzesFromDB = async () => {
+  // Step 1: Get unique quizIds from incorrect UserQuizzes
+  const quizIdsResult = await UserQuizModel.aggregate([
+    {
+      $match: {
+        isCorrect: false,
+      },
+    },
+    {
+      $sample: { size: 30 },
+    },
+    {
+      $group: {
+        _id: "$quizId", // Get unique quizIds to avoid duplicates
+      },
+    },
+  ]);
+
+  // Extract quizIds array - FIX: Use quizId, not _id
+  const quizIds = quizIdsResult.map(item => item._id);
+
+  // Early return if no quizzes found
+  if (quizIds.length === 0) {
+    return { topicQuizzes: [], totalQuizzes: 0 };
+  }
+
+  // Step 2: Optimized single aggregation pipeline for TopicQuizzes
+  const topicQuizzes = await TopicQuizModel.aggregate([
+    // Match TopicQuizzes by quizIds and filter deleted (indexed fields)
+    {
+      $match: {
+        _id: { $in: quizIds },
+        isDeleted: false,
+      },
+    },
+    // Lookup ArgTopicId
+    {
+      $lookup: {
+        from: "argtopics",
+        localField: "ArgTopicId",
+        foreignField: "_id",
+        as: "ArgTopicId",
+      },
+    },
+    {
+      $unwind: {
+        path: "$ArgTopicId",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    // Lookup image
+    {
+      $lookup: {
+        from: "quizimages",
+        localField: "image",
+        foreignField: "_id",
+        as: "image",
+      },
+    },
+    {
+      $unwind: {
+        path: "$image",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    // Populate theoryImages (extract array first, then lookup)
+    {
+      $addFields: {
+        theoryImagesIds: "$ArgTopicId.theoryImages",
+      },
+    },
+    {
+      $lookup: {
+        from: "quizimages",
+        localField: "theoryImagesIds",
+        foreignField: "_id",
+        as: "theoryImagesPopulated",
+      },
+    },
+    {
+      $addFields: {
+        "ArgTopicId.theoryImages": "$theoryImagesPopulated",
+      },
+    },
+    // Clean up temporary fields
+    {
+      $project: {
+        theoryImagesPopulated: 0,
+        theoryImagesIds: 0,
+      },
+    },
+  ]);
+
+  return { topicQuizzes, totalQuizzes: topicQuizzes.length };
+};
+
 export const userQuizService = {
   createUserQuizIntoDB,
   getUserQuizByQuery,
+  getRandomPlayedQuizzesFromDB,
 };

@@ -12,5 +12,9 @@ router.post(
 );
 
 router.get("/", userQuizControllers.getUserQuizByQuery);
+router.get(
+  "/random-played-quizzes",
+  userQuizControllers.getRandomPlayedQuizzes,
+);
 
 export const userQuizzesRoutes = router;

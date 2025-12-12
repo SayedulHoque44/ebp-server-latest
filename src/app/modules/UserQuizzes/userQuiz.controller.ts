@@ -24,7 +24,20 @@ const getUserQuizByQuery = catchAsync(async (req, res) => {
   });
 });
 
+// get random played quizzes
+const getRandomPlayedQuizzes = catchAsync(async (req, res) => {
+  const randomPlayedQuizzes =
+    await userQuizService.getRandomPlayedQuizzesFromDB();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Random Played Quizzes retrive Successfully!",
+    data: randomPlayedQuizzes,
+  });
+});
+
 export const userQuizControllers = {
   createUserQuiz,
   getUserQuizByQuery,
+  getRandomPlayedQuizzes,
 };
