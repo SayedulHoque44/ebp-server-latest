@@ -1,4 +1,5 @@
 import httpStatus from "http-status";
+import { Types } from "mongoose";
 import AppError from "../../error/AppError";
 import { TopicQuizModel } from "../TopicQuizzes/topicQuizzes.model";
 import { TUserQuiz } from "./userQuiz.interface";
@@ -94,11 +95,19 @@ const createUserQuizIntoDB = async (payload: TUserQuiz[]) => {
   return { user, quizzesAdded: validPayload.length };
 };
 
-const getUserQuizByQuery = async (query: Record<string, unknown>) => {
+const getUserQuizByQuery = async (
+  query: Record<string, unknown>,
+  userId?: string,
+) => {
+  if (!userId) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User ID is required!");
+  }
   // Convert string boolean to actual boolean for isCorrect
   if (query.isCorrect !== undefined) {
     query.isCorrect = query.isCorrect === "true" || query.isCorrect === true;
   }
+
+  query.userId = userId;
 
   // console.log(query);
   const userQuiz = new QueryBuilder(UserQuizModel.find(), query)
@@ -210,8 +219,50 @@ const getRandomPlayedQuizzesFromDB = async () => {
   return { topicQuizzes, totalQuizzes: topicQuizzes.length };
 };
 
+const geSingletUserQuizStatisticsFromDB = async (userId: string) => {
+  const totalQuizzes = await TopicQuizModel.countDocuments();
+  const totalCorrectQuizzes = await UserQuizModel.countDocuments({
+    userId,
+    isCorrect: true,
+  });
+  const totalinCorrectQuizzes = await UserQuizModel.countDocuments({
+    userId,
+    isCorrect: false,
+  });
+
+  // Calculate total sum of playedCount for all quizzes played by this user
+  const quizPlayedTotalCountResult = await UserQuizModel.aggregate([
+    {
+      $match: {
+        userId: new Types.ObjectId(userId),
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalPlayedCount: { $sum: "$playedCount" },
+      },
+    },
+  ]);
+
+  const totalPlayedCount =
+    quizPlayedTotalCountResult.length > 0
+      ? quizPlayedTotalCountResult[0].totalPlayedCount
+      : 0;
+
+  const remainingQuizzes = totalQuizzes - totalCorrectQuizzes;
+  return {
+    totalQuizzes,
+    totalCorrectQuizzes,
+    totalinCorrectQuizzes,
+    totalPlayedCount,
+    remainingQuizzes,
+  };
+};
+
 export const userQuizService = {
   createUserQuizIntoDB,
   getUserQuizByQuery,
   getRandomPlayedQuizzesFromDB,
+  geSingletUserQuizStatisticsFromDB,
 };

@@ -14,8 +14,11 @@ const createUserQuiz = catchAsync(async (req, res) => {
 });
 
 // get user quiz by userId
-const getUserQuizByQuery = catchAsync(async (req, res) => {
-  const userQuiz = await userQuizService.getUserQuizByQuery(req.query);
+const getUserQuizByQuery = catchAsync(async (req: any, res) => {
+  const userQuiz = await userQuizService.getUserQuizByQuery(
+    req.query,
+    req.user.userId,
+  );
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -36,8 +39,22 @@ const getRandomPlayedQuizzes = catchAsync(async (req, res) => {
   });
 });
 
+// get singlet user quiz statistics
+const getSingletUserQuizStatistics = catchAsync(async (req, res) => {
+  const singletUserQuizStatistics =
+    await userQuizService.geSingletUserQuizStatisticsFromDB(
+      req.params.userId as string,
+    );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Singlet User Quiz Statistics retrive Successfully!",
+    data: singletUserQuizStatistics,
+  });
+});
 export const userQuizControllers = {
   createUserQuiz,
   getUserQuizByQuery,
   getRandomPlayedQuizzes,
+  getSingletUserQuizStatistics,
 };
