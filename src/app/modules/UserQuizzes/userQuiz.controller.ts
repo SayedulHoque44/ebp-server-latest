@@ -28,9 +28,9 @@ const getUserQuizByQuery = catchAsync(async (req: any, res) => {
 });
 
 // get random played quizzes
-const getRandomPlayedQuizzes = catchAsync(async (req, res) => {
+const getRandomPlayedQuizzes = catchAsync(async (req: any, res) => {
   const randomPlayedQuizzes =
-    await userQuizService.getRandomPlayedQuizzesFromDB();
+    await userQuizService.getRandomPlayedQuizzesFromDB(req.user.userId);
   sendResponse(res, {
     statusCode: 200,
     success: true,

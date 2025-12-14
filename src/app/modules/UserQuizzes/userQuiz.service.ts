@@ -123,12 +123,13 @@ const getUserQuizByQuery = async (
   };
 };
 
-const getRandomPlayedQuizzesFromDB = async () => {
+const getRandomPlayedQuizzesFromDB = async (userId: string) => {
   // Step 1: Get unique quizIds from incorrect UserQuizzes
   const quizIdsResult = await UserQuizModel.aggregate([
     {
       $match: {
         isCorrect: false,
+        userId: new Types.ObjectId(userId),
       },
     },
     {
