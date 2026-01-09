@@ -44,7 +44,8 @@ const getSingleArgTopicById = (0, catchAsync_1.default)((req, res) => __awaiter(
     });
 }));
 const getArgTopicsByQuery = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const args = yield argTopics_service_1.ArgTopicServices.getArgTopicsQueryFromDb(req.query);
+    var _a;
+    const args = yield argTopics_service_1.ArgTopicServices.getArgTopicsQueryFromDb(req.query, ((_a = req.body) === null || _a === void 0 ? void 0 : _a.argumentIds) || []);
     (0, sendResponse_1.default)(res, {
         statusCode: 201,
         success: true,

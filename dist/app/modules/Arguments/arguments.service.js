@@ -88,12 +88,27 @@ const getArgumentsQueryFromDb = (query) => __awaiter(void 0, void 0, void 0, fun
     let result = yield argumentsQuery.modelQuery.populate("image");
     const meta = yield argumentsQuery.countTotal();
     if (countWQuery) {
-        result = yield Promise.all(result.map((arg) => __awaiter(void 0, void 0, void 0, function* () {
-            const totalQuizzes = yield topicQuizzes_model_1.TopicQuizModel.countDocuments({
-                argumentId: arg._id,
-            });
-            return Object.assign(Object.assign({}, arg.toObject()), { totalQuizzes });
-        })));
+        // Extract all argument IDs from the result
+        const argumentIds = result.map(arg => arg._id);
+        // Get all quiz counts in a single aggregation query
+        const quizCounts = yield topicQuizzes_model_1.TopicQuizModel.aggregate([
+            {
+                $match: {
+                    argumentId: { $in: argumentIds },
+                    isDeleted: false,
+                },
+            },
+            {
+                $group: {
+                    _id: "$argumentId",
+                    totalQuizzes: { $sum: 1 },
+                },
+            },
+        ]);
+        // Create a map for O(1) lookup
+        const countMap = new Map(quizCounts.map(item => [item._id.toString(), item.totalQuizzes]));
+        // Merge counts into results
+        result = result.map(arg => (Object.assign(Object.assign({}, arg.toObject()), { totalQuizzes: countMap.get(arg._id.toString()) || 0 })));
     }
     return {
         meta,

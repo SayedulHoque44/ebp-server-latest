@@ -13,6 +13,7 @@ const UniContent_routes_1 = require("../modules/UniContent/UniContent.routes");
 const FileUplodeOperation_1 = require("../modules/FileUplodeOperation");
 const words_routes_1 = require("../modules/words/words.routes");
 const system_routes_1 = require("../modules/system/system.routes");
+const userQuiz_routes_1 = require("../modules/UserQuizzes/userQuiz.routes");
 const router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -66,6 +67,10 @@ const moduleRoutes = [
     {
         path: "/system",
         route: system_routes_1.systemRoutes,
+    },
+    {
+        path: "/userQuizzes",
+        route: userQuiz_routes_1.userQuizzesRoutes,
     },
 ];
 moduleRoutes.forEach(route => router.use(route.path, route.route));

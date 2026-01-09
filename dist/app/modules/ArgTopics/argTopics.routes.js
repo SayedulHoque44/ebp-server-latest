@@ -14,6 +14,7 @@ const router = express_1.default.Router();
 router.post("/", (0, validateRequest_1.default)(argTopics_validation_1.argTopicValidation.createArgTopicSchema), argTopics_controller_1.ArgTopicControllers.createArgTopic);
 // get all
 router.get("/", argTopics_controller_1.ArgTopicControllers.getArgTopicsByQuery);
+router.post("/get-by-argIds", argTopics_controller_1.ArgTopicControllers.getArgTopicsByQuery);
 // single get
 router.get("/:argTopicId", argTopics_controller_1.ArgTopicControllers.getSingleArgTopicById);
 // update

@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TopicQuizServices = void 0;
 const http_status_1 = __importDefault(require("http-status"));
+const mongoose_1 = require("mongoose");
 const QueryBuilder_1 = __importDefault(require("../../../builder/QueryBuilder"));
 const AppError_1 = __importDefault(require("../../error/AppError"));
 const topicQuizzes_model_1 = require("./topicQuizzes.model");
@@ -163,6 +164,200 @@ const getTopicQuizzesQueryFromDb = (query) => __awaiter(void 0, void 0, void 0, 
     }
 });
 //
+const getRandomTopicQuizzesByTopicsIdsFromDb = (topicsIds) => __awaiter(void 0, void 0, void 0, function* () {
+    // Convert to ObjectIds once before the pipeline for better performance
+    const topicObjectIds = topicsIds.map(id => new mongoose_1.Types.ObjectId(id));
+    const topicQuizzes = yield topicQuizzes_model_1.TopicQuizModel.aggregate([
+        {
+            $match: {
+                ArgTopicId: { $in: topicObjectIds },
+                isDeleted: false, // CRITICAL: Filter deleted quizzes before sampling
+            },
+        },
+        // Sample after filtering to work on smaller dataset
+        { $sample: { size: 30 } },
+        // Populate ArgTopicId with theoryImages
+        {
+            $lookup: {
+                from: "argtopics",
+                localField: "ArgTopicId",
+                foreignField: "_id",
+                as: "ArgTopicId",
+            },
+        },
+        {
+            $unwind: {
+                path: "$ArgTopicId",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        // Populate image
+        {
+            $lookup: {
+                from: "quizimages",
+                localField: "image",
+                foreignField: "_id",
+                as: "image",
+            },
+        },
+        {
+            $unwind: {
+                path: "$image",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        // Populate theoryImages
+        {
+            $addFields: {
+                theoryImagesIds: "$ArgTopicId.theoryImages",
+            },
+        },
+        {
+            $lookup: {
+                from: "quizimages",
+                localField: "theoryImagesIds",
+                foreignField: "_id",
+                as: "theoryImagesTemp",
+            },
+        },
+        {
+            $addFields: {
+                "ArgTopicId.theoryImages": "$theoryImagesTemp",
+            },
+        },
+        {
+            $project: {
+                theoryImagesTemp: 0,
+                theoryImagesIds: 0,
+            },
+        },
+    ]);
+    return { topicQuizzes, totalQuizzes: topicQuizzes.length };
+});
+//
+const getRandomThirtyQuizzesFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
+    // Get all arguments (assuming there are always 25)
+    const allArguments = yield arguments_model_1.ArgumentsModel.find({ isDeleted: false })
+        .select("_id")
+        .lean();
+    if (allArguments.length < 25) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Not Enough Arguments! Need at least 25 arguments to make 30 quizzes!");
+    }
+    // Split arguments: first 5 and remaining 20
+    const firstFiveArguments = allArguments.slice(0, 5);
+    const remainingTwentyArguments = allArguments.slice(5, 25);
+    // Parallelize all queries using Promise.all - this is MUCH faster than sequential
+    const firstFivePromises = firstFiveArguments.map(argument => topicQuizzes_model_1.TopicQuizModel.aggregate([
+        {
+            $match: {
+                argumentId: argument._id,
+                isDeleted: false,
+            },
+        },
+        {
+            $sample: { size: 2 }, // Randomly select 2 quizzes
+        },
+    ]));
+    const remainingTwentyPromises = remainingTwentyArguments.map(argument => topicQuizzes_model_1.TopicQuizModel.aggregate([
+        {
+            $match: {
+                argumentId: argument._id,
+                isDeleted: false,
+            },
+        },
+        {
+            $sample: { size: 1 }, // Randomly select 1 quiz
+        },
+    ]));
+    // Execute all queries in parallel
+    const [firstFiveResults, remainingTwentyResults] = yield Promise.all([
+        Promise.all(firstFivePromises),
+        Promise.all(remainingTwentyPromises),
+    ]);
+    // Flatten results and validate
+    const selectedQuizzes = [];
+    // Validate and collect first 5 arguments' quizzes
+    for (let i = 0; i < firstFiveResults.length; i++) {
+        const quizzes = firstFiveResults[i];
+        if (quizzes.length < 2) {
+            throw new AppError_1.default(http_status_1.default.BAD_REQUEST, `Not enough quizzes in argument ${firstFiveArguments[i]._id}. Need at least 2 quizzes per argument from first 5 arguments.`);
+        }
+        selectedQuizzes.push(...quizzes);
+    }
+    // Validate and collect remaining 20 arguments' quizzes
+    for (let i = 0; i < remainingTwentyResults.length; i++) {
+        const quizzes = remainingTwentyResults[i];
+        if (quizzes.length < 1) {
+            throw new AppError_1.default(http_status_1.default.BAD_REQUEST, `Not enough quizzes in argument ${remainingTwentyArguments[i]._id}. Need at least 1 quiz per argument from remaining 20 arguments.`);
+        }
+        selectedQuizzes.push(...quizzes);
+    }
+    // Use single aggregation with $lookup for population instead of separate populate
+    // This is more efficient than Mongoose populate
+    const populatedQuizzes = yield topicQuizzes_model_1.TopicQuizModel.aggregate([
+        {
+            $match: {
+                _id: { $in: selectedQuizzes.map(q => q._id) },
+            },
+        },
+        // Populate ArgTopicId with theoryImages
+        {
+            $lookup: {
+                from: "argtopics",
+                localField: "ArgTopicId",
+                foreignField: "_id",
+                as: "ArgTopicId",
+            },
+        },
+        {
+            $unwind: {
+                path: "$ArgTopicId",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $addFields: {
+                theoryImagesIds: "$ArgTopicId.theoryImages",
+            },
+        },
+        {
+            $lookup: {
+                from: "quizimages",
+                localField: "theoryImagesIds",
+                foreignField: "_id",
+                as: "theoryImagesTemp",
+            },
+        },
+        {
+            $addFields: {
+                "ArgTopicId.theoryImages": "$theoryImagesTemp",
+            },
+        },
+        {
+            $project: {
+                theoryImagesTemp: 0,
+                theoryImagesIds: 0,
+            },
+        },
+        // Populate image
+        {
+            $lookup: {
+                from: "quizimages",
+                localField: "image",
+                foreignField: "_id",
+                as: "image",
+            },
+        },
+        {
+            $unwind: {
+                path: "$image",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+    ]);
+    return populatedQuizzes;
+});
+//
 const deleteTopicQuizFromDB = (topicQuizId) => __awaiter(void 0, void 0, void 0, function* () {
     const topicQuiz = yield topicQuizzes_model_1.TopicQuizModel.findById(topicQuizId);
     if (!topicQuiz) {
@@ -215,4 +410,6 @@ exports.TopicQuizServices = {
     getSingleTopicQuizByIdFromDb,
     deleteTopicQuizFromDB,
     getQuizzesQueryFromDbinApp,
+    getRandomTopicQuizzesByTopicsIdsFromDb,
+    getRandomThirtyQuizzesFromDB,
 };

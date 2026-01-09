@@ -34,5 +34,8 @@ const topicQuizSchema = new mongoose_1.Schema({
         default: false,
     },
 }, { timestamps: true });
+// Add indexes for better query performance
+topicQuizSchema.index({ argumentId: 1, isDeleted: 1 });
+topicQuizSchema.index({ ArgTopicId: 1, isDeleted: 1 });
 // model
 exports.TopicQuizModel = (0, mongoose_1.model)("TopicQuizze", topicQuizSchema);

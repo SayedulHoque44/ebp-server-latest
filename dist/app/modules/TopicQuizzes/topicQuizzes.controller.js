@@ -72,6 +72,24 @@ const getQuizzesQueryFromDbinApp = (0, catchAsync_1.default)((req, res) => __awa
         data: args,
     });
 }));
+const getRandomTopicQuizzesByTopicsIds = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const randomTopicQuizzes = yield topicQuizzes_service_1.TopicQuizServices.getRandomTopicQuizzesByTopicsIdsFromDb(req.body.topicsIds);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 201,
+        success: true,
+        message: "Random Topic Quizzes retrive Successfully!",
+        data: randomTopicQuizzes,
+    });
+}));
+const getRandomThirtyQuizzes = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const randomThirtyQuizzes = yield topicQuizzes_service_1.TopicQuizServices.getRandomThirtyQuizzesFromDB();
+    (0, sendResponse_1.default)(res, {
+        statusCode: 201,
+        success: true,
+        message: "Random Thirty Quizzes retrive Successfully!",
+        data: randomThirtyQuizzes,
+    });
+}));
 exports.TopicQuizControllers = {
     createTopicQuiz,
     updateTopicQuiz,
@@ -79,4 +97,6 @@ exports.TopicQuizControllers = {
     getTopicQuizzesByQuery,
     deleteTopicQuiz,
     getQuizzesQueryFromDbinApp,
+    getRandomTopicQuizzesByTopicsIds,
+    getRandomThirtyQuizzes,
 };

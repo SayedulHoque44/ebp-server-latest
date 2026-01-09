@@ -88,15 +88,55 @@ const getSingleArgTopicByIdFromDb = (argTopicId) => __awaiter(void 0, void 0, vo
     }
     return argTopic;
 });
-const getArgTopicsQueryFromDb = (query) => __awaiter(void 0, void 0, void 0, function* () {
+// This function seems generally okay based on the signature and usage.
+// It takes a `query` object and an array of `argumentIds`, builds up a query using QueryBuilder,
+// filters by those provided ids if the array is non-empty, then returns paginated results with some populations.
+//
+// A couple of minor suggestions for robustness/readability (not errors):
+//  - confirm that argumentIds will always be provided (default to [] if not?)
+//  - check for null/undefined before .length on argumentIds
+// Otherwise, it works as intended.
+const getArgTopicsQueryFromDb = (query, argumentIds = []) => __awaiter(void 0, void 0, void 0, function* () {
+    const countWQuery = query.count ? query.count : false;
+    delete query.count;
     const argTopicsQuery = new QueryBuilder_1.default(argTopics_model_1.ArgTopicsModel.find(), query)
         .search(["title", "theory"])
         .filter()
         .sort()
         .paginate()
         .fields();
-    const result = yield argTopicsQuery.modelQuery.populate("image theoryImages argumentId");
+    if (Array.isArray(argumentIds) && argumentIds.length > 0) {
+        argTopicsQuery.modelQuery.where({
+            argumentId: {
+                $in: argumentIds,
+            },
+        });
+    }
+    let result = yield argTopicsQuery.modelQuery.populate("image theoryImages argumentId");
     const meta = yield argTopicsQuery.countTotal();
+    if (countWQuery) {
+        // Extract all ArgTopic IDs from the result
+        const argTopicIds = result.map(argTopic => argTopic._id);
+        // Get all quiz counts in a single aggregation query
+        const quizCounts = yield topicQuizzes_model_1.TopicQuizModel.aggregate([
+            {
+                $match: {
+                    ArgTopicId: { $in: argTopicIds },
+                    isDeleted: false,
+                },
+            },
+            {
+                $group: {
+                    _id: "$ArgTopicId",
+                    totalQuizzes: { $sum: 1 },
+                },
+            },
+        ]);
+        // Create a map for O(1) lookup
+        const countMap = new Map(quizCounts.map(item => [item._id.toString(), item.totalQuizzes]));
+        // Merge counts into results
+        result = result.map(argTopic => (Object.assign(Object.assign({}, argTopic.toObject()), { totalQuizzes: countMap.get(argTopic._id.toString()) || 0 })));
+    }
     return {
         meta,
         result,

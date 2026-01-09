@@ -18,6 +18,10 @@ router.get("/", topicQuizzes_controller_1.TopicQuizControllers.getTopicQuizzesBy
 router.get("/:topicQuizId", topicQuizzes_controller_1.TopicQuizControllers.getSingleTopicQuizById);
 // update
 router.patch("/:topicQuizId", (0, validateRequest_1.default)(topicQuizzes_validation_1.argumentsValidation.updateArgumentSchema), topicQuizzes_controller_1.TopicQuizControllers.updateTopicQuiz);
+// random topic quizzes
+router.post("/random/by-topics-ids", topicQuizzes_controller_1.TopicQuizControllers.getRandomTopicQuizzesByTopicsIds);
+// random thirty quizzes - from random arguments with 2 quizzes from first 5 arguments and 1 quiz from remaining 20 arguments
+router.get("/random/thirty-quizzes", topicQuizzes_controller_1.TopicQuizControllers.getRandomThirtyQuizzes);
 // delete
 router.delete("/:topicQuizId", topicQuizzes_controller_1.TopicQuizControllers.deleteTopicQuiz);
 // --------------- App
