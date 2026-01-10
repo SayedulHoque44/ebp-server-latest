@@ -278,12 +278,20 @@ const getRandomThirtyQuizzesFromDB = async () => {
     );
   }
 
-  // Split arguments: first 5 and remaining 20
-  const firstFiveArguments = allArguments.slice(0, 5);
-  const remainingTwentyArguments = allArguments.slice(5, 25);
+  // Define which arguments should get 2 quizzes (1-indexed: 5, 12, 13, 17, 22)
+  // Convert to 0-indexed: 4, 11, 12, 16, 21
+  const twoQuizArgumentIndices = [4, 11, 12, 16, 21];
+
+  // Split arguments: those that get 2 quizzes and those that get 1 quiz
+  const twoQuizArguments = twoQuizArgumentIndices.map(
+    index => allArguments[index],
+  );
+  const oneQuizArguments = allArguments.filter(
+    (_, index) => !twoQuizArgumentIndices.includes(index),
+  );
 
   // Parallelize all queries using Promise.all - this is MUCH faster than sequential
-  const firstFivePromises = firstFiveArguments.map(argument =>
+  const twoQuizPromises = twoQuizArguments.map(argument =>
     TopicQuizModel.aggregate([
       {
         $match: {
@@ -300,7 +308,7 @@ const getRandomThirtyQuizzesFromDB = async () => {
     ]),
   );
 
-  const remainingTwentyPromises = remainingTwentyArguments.map(argument =>
+  const oneQuizPromises = oneQuizArguments.map(argument =>
     TopicQuizModel.aggregate([
       {
         $match: {
@@ -318,34 +326,34 @@ const getRandomThirtyQuizzesFromDB = async () => {
   );
 
   // Execute all queries in parallel
-  const [firstFiveResults, remainingTwentyResults] = await Promise.all([
-    Promise.all(firstFivePromises),
-    Promise.all(remainingTwentyPromises),
+  const [twoQuizResults, oneQuizResults] = await Promise.all([
+    Promise.all(twoQuizPromises),
+    Promise.all(oneQuizPromises),
   ]);
-  // console.log("firstFiveResults", firstFiveResults);
-  // console.log("remainingTwentyResults", remainingTwentyResults);
+  // console.log("twoQuizResults", twoQuizResults);
+  // console.log("oneQuizResults", oneQuizResults);
   // Flatten results and validate
   const selectedQuizzes: (TTopicQuiz & { _id: Types.ObjectId })[] = [];
 
-  // Validate and collect first 5 arguments' quizzes
-  for (let i = 0; i < firstFiveResults.length; i++) {
-    const quizzes = firstFiveResults[i];
+  // Validate and collect arguments that should have 2 quizzes
+  for (let i = 0; i < twoQuizResults.length; i++) {
+    const quizzes = twoQuizResults[i];
     if (quizzes.length < 2) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
-        `Not enough quizzes in argument ${firstFiveArguments[i]._id}. Need at least 2 quizzes per argument from first 5 arguments.`,
+        `Not enough quizzes in argument ${twoQuizArguments[i]._id}. Need at least 2 quizzes per argument from arguments 5, 12, 13, 17, 22.`,
       );
     }
     selectedQuizzes.push(...quizzes);
   }
 
-  // Validate and collect remaining 20 arguments' quizzes
-  for (let i = 0; i < remainingTwentyResults.length; i++) {
-    const quizzes = remainingTwentyResults[i];
+  // Validate and collect remaining arguments' quizzes (1 quiz each)
+  for (let i = 0; i < oneQuizResults.length; i++) {
+    const quizzes = oneQuizResults[i];
     if (quizzes.length < 1) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
-        `Not enough quizzes in argument ${remainingTwentyArguments[i]._id}. Need at least 1 quiz per argument from remaining 20 arguments.`,
+        `Not enough quizzes in argument ${oneQuizArguments[i]._id}. Need at least 1 quiz per argument from remaining arguments.`,
       );
     }
     selectedQuizzes.push(...quizzes);
