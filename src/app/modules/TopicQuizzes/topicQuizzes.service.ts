@@ -294,6 +294,9 @@ const getRandomThirtyQuizzesFromDB = async () => {
       {
         $sample: { size: 2 }, // Randomly select 2 quizzes
       },
+      {
+        $project: { _id: 1 },
+      },
     ]),
   );
 
@@ -308,6 +311,9 @@ const getRandomThirtyQuizzesFromDB = async () => {
       {
         $sample: { size: 1 }, // Randomly select 1 quiz
       },
+      {
+        $project: { _id: 1 },
+      },
     ]),
   );
 
@@ -316,7 +322,8 @@ const getRandomThirtyQuizzesFromDB = async () => {
     Promise.all(firstFivePromises),
     Promise.all(remainingTwentyPromises),
   ]);
-
+  // console.log("firstFiveResults", firstFiveResults);
+  // console.log("remainingTwentyResults", remainingTwentyResults);
   // Flatten results and validate
   const selectedQuizzes: (TTopicQuiz & { _id: Types.ObjectId })[] = [];
 
@@ -343,13 +350,23 @@ const getRandomThirtyQuizzesFromDB = async () => {
     }
     selectedQuizzes.push(...quizzes);
   }
-
+  // console.log("selectedQuizzes", selectedQuizzes);
+  const shuffledQuizzes = [...selectedQuizzes];
+  // here shuflle the selectedQuizzes array to randomize the order
+  for (let i = selectedQuizzes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledQuizzes[i], shuffledQuizzes[j]] = [
+      shuffledQuizzes[j],
+      shuffledQuizzes[i],
+    ];
+  }
+  // console.log("shuffledQuizzes", shuffledQuizzes);
   // Use single aggregation with $lookup for population instead of separate populate
   // This is more efficient than Mongoose populate
   const populatedQuizzes = await TopicQuizModel.aggregate([
     {
       $match: {
-        _id: { $in: selectedQuizzes.map(q => q._id) },
+        _id: { $in: shuffledQuizzes.map(q => q._id) },
       },
     },
     // Populate ArgTopicId with theoryImages
