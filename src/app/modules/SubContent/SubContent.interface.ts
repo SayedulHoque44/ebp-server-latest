@@ -6,5 +6,6 @@ export type TSubContent = {
   info: string;
   imageUrl: string;
   url: string;
+  youtubeUrl: string;
   index: number;
 };

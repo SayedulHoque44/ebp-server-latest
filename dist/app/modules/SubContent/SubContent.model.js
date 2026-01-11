@@ -31,6 +31,9 @@ const SubContentSchema = new mongoose_1.Schema({
     url: {
         type: String,
     },
+    youtubeUrl: {
+        type: String,
+    },
     index: {
         type: Number,
     },

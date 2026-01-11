@@ -9,6 +9,7 @@ const createSubContent = zod_1.z.object({
         info: zod_1.z.string().optional(),
         imageUrl: zod_1.z.string().optional(),
         url: zod_1.z.string().optional(),
+        youtubeUrl: zod_1.z.string().optional(),
     }),
 });
 exports.SubContentValidationSchemas = { createSubContent };

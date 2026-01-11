@@ -25,6 +25,9 @@ const SubContentSchema = new Schema<TSubContent>(
     url: {
       type: String,
     },
+    youtubeUrl: {
+      type: String,
+    },
     index: {
       type: Number,
     },

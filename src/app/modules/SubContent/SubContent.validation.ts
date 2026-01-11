@@ -7,6 +7,7 @@ const createSubContent = z.object({
     info: z.string().optional(),
     imageUrl: z.string().optional(),
     url: z.string().optional(),
+    youtubeUrl: z.string().optional(),
   }),
 });
 
