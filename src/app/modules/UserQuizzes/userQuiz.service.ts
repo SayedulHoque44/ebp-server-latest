@@ -109,7 +109,6 @@ const getUserQuizByQuery = async (
 
   query.userId = userId;
 
-  // console.log(query);
   const userQuiz = new QueryBuilder(UserQuizModel.find(), query)
     .filter()
     .sort()
@@ -147,7 +146,6 @@ const getRandomPlayedQuizzesFromDB = async (userId: string) => {
       },
     },
   ]);
-  console.log("quizIdsResult", quizIdsResult);
   // Extract quizIds array - FIX: Use quizId, not _id
   const quizIds = quizIdsResult.map(item => item._id);
 
@@ -233,8 +231,6 @@ const getRandomPlayedQuizzesFromDB = async (userId: string) => {
     ];
   }
 
-  const topicQuizIds = shuffledTopicQuizzes.map(item => item._id);
-  console.log("topicQuizIds", topicQuizIds);
   return {
     topicQuizzes: shuffledTopicQuizzes,
     totalQuizzes: shuffledTopicQuizzes.length,
