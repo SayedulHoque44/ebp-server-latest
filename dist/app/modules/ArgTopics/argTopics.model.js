@@ -59,5 +59,7 @@ const argTopicSchema = new mongoose_1.Schema({
         default: false,
     },
 }, { timestamps: true });
+// Add indexes for better query performance
+argTopicSchema.index({ argumentId: 1 });
 // model
 exports.ArgTopicsModel = (0, mongoose_1.model)("ArgTopic", argTopicSchema);

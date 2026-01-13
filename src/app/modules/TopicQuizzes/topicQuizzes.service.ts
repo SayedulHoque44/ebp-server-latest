@@ -359,22 +359,15 @@ const getRandomThirtyQuizzesFromDB = async () => {
     selectedQuizzes.push(...quizzes);
   }
   // console.log("selectedQuizzes", selectedQuizzes);
-  const shuffledQuizzes = [...selectedQuizzes];
-  // here shuflle the selectedQuizzes array to randomize the order
-  for (let i = selectedQuizzes.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledQuizzes[i], shuffledQuizzes[j]] = [
-      shuffledQuizzes[j],
-      shuffledQuizzes[i],
-    ];
-  }
-  // console.log("shuffledQuizzes", shuffledQuizzes);
+  // Extract quiz IDs for the query
+  const quizIds = selectedQuizzes.map(q => q._id);
+
   // Use single aggregation with $lookup for population instead of separate populate
   // This is more efficient than Mongoose populate
   const populatedQuizzes = await TopicQuizModel.aggregate([
     {
       $match: {
-        _id: { $in: shuffledQuizzes.map(q => q._id) },
+        _id: { $in: quizIds },
       },
     },
     // Populate ArgTopicId with theoryImages
@@ -433,7 +426,17 @@ const getRandomThirtyQuizzesFromDB = async () => {
     },
   ]);
 
-  return populatedQuizzes;
+  // Shuffle the results to randomize the order (since $in doesn't preserve order)
+  const shuffledPopulatedQuizzes = [...populatedQuizzes];
+  for (let i = shuffledPopulatedQuizzes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledPopulatedQuizzes[i], shuffledPopulatedQuizzes[j]] = [
+      shuffledPopulatedQuizzes[j],
+      shuffledPopulatedQuizzes[i],
+    ];
+  }
+
+  return shuffledPopulatedQuizzes;
 };
 //
 const deleteTopicQuizFromDB = async (topicQuizId: string) => {

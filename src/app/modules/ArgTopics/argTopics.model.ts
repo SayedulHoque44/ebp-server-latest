@@ -62,5 +62,8 @@ const argTopicSchema = new Schema<TArgTopic>(
   { timestamps: true },
 );
 
+// Add indexes for better query performance
+argTopicSchema.index({ argumentId: 1 });
+
 // model
 export const ArgTopicsModel = model<TArgTopic>("ArgTopic", argTopicSchema);

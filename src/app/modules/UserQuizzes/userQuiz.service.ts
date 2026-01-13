@@ -115,7 +115,13 @@ const getUserQuizByQuery = async (
     .sort()
     .paginate()
     .fields();
-  const result = await userQuiz.modelQuery.populate("quizId");
+  const result = await userQuiz.modelQuery.populate({
+    path: "quizId",
+    populate: {
+      path: "image",
+    },
+  });
+
   const meta = await userQuiz.countTotal();
   return {
     meta,
@@ -141,7 +147,7 @@ const getRandomPlayedQuizzesFromDB = async (userId: string) => {
       },
     },
   ]);
-
+  console.log("quizIdsResult", quizIdsResult);
   // Extract quizIds array - FIX: Use quizId, not _id
   const quizIds = quizIdsResult.map(item => item._id);
 
@@ -217,7 +223,22 @@ const getRandomPlayedQuizzesFromDB = async (userId: string) => {
     },
   ]);
 
-  return { topicQuizzes, totalQuizzes: topicQuizzes.length };
+  // Shuffle the results to randomize the order (since $in returns results in array order)
+  const shuffledTopicQuizzes = [...topicQuizzes];
+  for (let i = shuffledTopicQuizzes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledTopicQuizzes[i], shuffledTopicQuizzes[j]] = [
+      shuffledTopicQuizzes[j],
+      shuffledTopicQuizzes[i],
+    ];
+  }
+
+  const topicQuizIds = shuffledTopicQuizzes.map(item => item._id);
+  console.log("topicQuizIds", topicQuizIds);
+  return {
+    topicQuizzes: shuffledTopicQuizzes,
+    totalQuizzes: shuffledTopicQuizzes.length,
+  };
 };
 
 const geSingletUserQuizStatisticsFromDB = async (userId: string) => {

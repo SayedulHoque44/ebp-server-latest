@@ -100,7 +100,12 @@ const getUserQuizByQuery = (query, userId) => __awaiter(void 0, void 0, void 0, 
         .sort()
         .paginate()
         .fields();
-    const result = yield userQuiz.modelQuery.populate("quizId");
+    const result = yield userQuiz.modelQuery.populate({
+        path: "quizId",
+        populate: {
+            path: "image",
+        },
+    });
     const meta = yield userQuiz.countTotal();
     return {
         meta,
@@ -125,6 +130,7 @@ const getRandomPlayedQuizzesFromDB = (userId) => __awaiter(void 0, void 0, void 
             },
         },
     ]);
+    console.log("quizIdsResult", quizIdsResult);
     // Extract quizIds array - FIX: Use quizId, not _id
     const quizIds = quizIdsResult.map(item => item._id);
     // Early return if no quizzes found
@@ -197,7 +203,21 @@ const getRandomPlayedQuizzesFromDB = (userId) => __awaiter(void 0, void 0, void 
             },
         },
     ]);
-    return { topicQuizzes, totalQuizzes: topicQuizzes.length };
+    // Shuffle the results to randomize the order (since $in returns results in array order)
+    const shuffledTopicQuizzes = [...topicQuizzes];
+    for (let i = shuffledTopicQuizzes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledTopicQuizzes[i], shuffledTopicQuizzes[j]] = [
+            shuffledTopicQuizzes[j],
+            shuffledTopicQuizzes[i],
+        ];
+    }
+    const topicQuizIds = shuffledTopicQuizzes.map(item => item._id);
+    console.log("topicQuizIds", topicQuizIds);
+    return {
+        topicQuizzes: shuffledTopicQuizzes,
+        totalQuizzes: shuffledTopicQuizzes.length,
+    };
 });
 const geSingletUserQuizStatisticsFromDB = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     const totalQuizzes = yield topicQuizzes_model_1.TopicQuizModel.countDocuments();
